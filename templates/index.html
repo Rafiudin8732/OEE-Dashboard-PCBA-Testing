@@ -1,251 +1,193 @@
-{% extends "base.html" %}
-
-{% block title %}PCBA Testing OEE Dashboard{% endblock %}
-
-{% block content %}
-<div class="app-shell">
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-icon">⚙️</div>
-            <div class="brand-text">
-                <h1>PCBA</h1>
-                <p>OEE Dashboard</p>
-            </div>
-        </div>
-
-        <nav class="sidebar-nav">
-            <button class="nav-item active" data-page="dashboard">📊 Dashboard</button>
-            <button class="nav-item" data-page="production">🏭 Production</button>
-            <button class="nav-item" data-page="quality">✓ Quality</button>
-            <button class="nav-item" data-page="reports">📄 Reports</button>
-            <button class="nav-item" data-page="settings">⚙️ Settings</button>
-        </nav>
-
-        <div class="sidebar-footer">
-            <div class="kpi-badge">
-                <span class="label">Target OEE</span>
-                <span class="value">92%</span>
-            </div>
-        </div>
-    </aside>
-
-    <main class="main-content">
-        <!-- Header -->
-        <header class="header-bar">
-            <div class="header-left">
-                <h2>Manufacturing Intelligence</h2>
-                <p class="subtitle">Real-time PCBA Testing Operations</p>
-            </div>
-            <div class="header-right">
-                <button class="btn-icon" title="Refresh">🔄</button>
-                <button class="btn-icon" title="Settings">⚙️</button>
-            </div>
-        </header>
-
-        <!-- Content Area -->
-        <div class="content-area" id="contentArea">
-            <!-- Dashboard Page -->
-            <div class="page dashboard-page active">
-                <!-- Filters -->
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <label>Production Line</label>
-                        <select id="lineFilter">
-                            <option value="">All Lines</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Shift</label>
-                        <select id="shiftFilter">
-                            <option value="">All Shifts</option>
-                            <option value="Day">Day</option>
-                            <option value="Swing">Swing</option>
-                            <option value="Night">Night</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Date Range</label>
-                        <input type="date" id="dateFrom">
-                        <input type="date" id="dateTo">
-                    </div>
-                    <button class="btn btn-primary" id="applyFilters">Apply</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCBA Testing OEE Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">⚙️</div>
+                <div class="brand-text">
+                    <h1>PCBA</h1>
+                    <p>OEE Dashboard</p>
                 </div>
+            </div>
 
-                <!-- KPI Cards -->
-                <div class="kpi-grid">
-                    <div class="kpi-card accent-blue">
-                        <div class="kpi-header">
-                            <span>Availability</span>
-                            <span class="status-badge up">+1.2%</span>
-                        </div>
-                        <div class="kpi-value" id="kpiAvailability">0%</div>
-                        <div class="kpi-label">Planned vs Run Time</div>
-                        <div class="kpi-chart mini-chart-availability"></div>
-                    </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-page="dashboard">📊 Dashboard</button>
+                <button class="nav-item" data-page="production">🏭 Production</button>
+                <button class="nav-item" data-page="quality">✓ Quality</button>
+                <button class="nav-item" data-page="reports">📄 Reports</button>
+                <button class="nav-item" data-page="settings">⚙️ Settings</button>
+            </nav>
 
-                    <div class="kpi-card accent-green">
-                        <div class="kpi-header">
-                            <span>Performance</span>
-                            <span class="status-badge up">+2.1%</span>
-                        </div>
-                        <div class="kpi-value" id="kpiPerformance">0%</div>
-                        <div class="kpi-label">Actual vs Target</div>
-                        <div class="kpi-chart mini-chart-performance"></div>
-                    </div>
-
-                    <div class="kpi-card accent-purple">
-                        <div class="kpi-header">
-                            <span>Quality</span>
-                            <span class="status-badge up">+0.8%</span>
-                        </div>
-                        <div class="kpi-value" id="kpiQuality">0%</div>
-                        <div class="kpi-label">First-Pass Good Units</div>
-                        <div class="kpi-chart mini-chart-quality"></div>
-                    </div>
-
-                    <div class="kpi-card accent-orange">
-                        <div class="kpi-header">
-                            <span>Overall Equipment Effectiveness</span>
-                            <span class="status-badge">OEE</span>
-                        </div>
-                        <div class="kpi-value" id="kpiOEE">0%</div>
-                        <div class="kpi-label">Composite Score</div>
-                        <div class="kpi-chart mini-chart-oee"></div>
-                    </div>
+            <div class="sidebar-footer">
+                <div class="kpi-badge">
+                    <span class="label">Target OEE</span>
+                    <span class="value">92%</span>
                 </div>
+            </div>
+        </aside>
 
-                <!-- Metrics Row -->
-                <div class="metrics-row">
-                    <div class="metric-box">
-                        <div class="metric-icon">📦</div>
-                        <div class="metric-info">
-                            <span class="metric-label">Good Units</span>
-                            <span class="metric-value" id="metricGoodUnits">0</span>
-                        </div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-icon">🔢</div>
-                        <div class="metric-info">
-                            <span class="metric-label">Total Units</span>
-                            <span class="metric-value" id="metricTotalUnits">0</span>
-                        </div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-icon">⏱️</div>
-                        <div class="metric-info">
-                            <span class="metric-label">Run Time</span>
-                            <span class="metric-value" id="metricRunTime">0h</span>
-                        </div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-icon">🚫</div>
-                        <div class="metric-info">
-                            <span class="metric-label">Downtime</span>
-                            <span class="metric-value" id="metricDowntime">0m</span>
-                        </div>
-                    </div>
+        <main class="main-content">
+            <header class="header-bar">
+                <div class="header-left">
+                    <h2>Manufacturing Intelligence</h2>
+                    <p class="subtitle">Real-time PCBA Testing Operations</p>
                 </div>
+                <div class="header-right">
+                    <button class="btn-icon" title="Refresh">🔄</button>
+                    <button class="btn-icon" title="Settings">⚙️</button>
+                </div>
+            </header>
 
-                <!-- Charts -->
-                <div class="chart-grid">
-                    <div class="chart-panel large">
+            <div class="content-area" id="contentArea">
+                <!-- Dashboard Page -->
+                <div class="page dashboard-page active">
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label>Production Line</label>
+                            <select id="lineFilter">
+                                <option value="">All Lines</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Shift</label>
+                            <select id="shiftFilter">
+                                <option value="">All Shifts</option>
+                                <option value="Day">Day</option>
+                                <option value="Swing">Swing</option>
+                                <option value="Night">Night</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Date Range</label>
+                            <input type="date" id="dateFrom">
+                            <input type="date" id="dateTo">
+                        </div>
+                        <button class="btn btn-primary" id="applyFilters">Apply</button>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card accent-blue">
+                            <div class="kpi-header">
+                                <span>Availability</span>
+                                <span class="status-badge up">+1.2%</span>
+                            </div>
+                            <div class="kpi-value" id="kpiAvailability">0%</div>
+                            <div class="kpi-label">Planned vs Run Time</div>
+                        </div>
+
+                        <div class="kpi-card accent-green">
+                            <div class="kpi-header">
+                                <span>Performance</span>
+                                <span class="status-badge up">+2.1%</span>
+                            </div>
+                            <div class="kpi-value" id="kpiPerformance">0%</div>
+                            <div class="kpi-label">Actual vs Target</div>
+                        </div>
+
+                        <div class="kpi-card accent-purple">
+                            <div class="kpi-header">
+                                <span>Quality</span>
+                                <span class="status-badge up">+0.8%</span>
+                            </div>
+                            <div class="kpi-value" id="kpiQuality">0%</div>
+                            <div class="kpi-label">First-Pass Good Units</div>
+                        </div>
+
+                        <div class="kpi-card accent-orange">
+                            <div class="kpi-header">
+                                <span>Overall Equipment Effectiveness</span>
+                                <span class="status-badge">OEE</span>
+                            </div>
+                            <div class="kpi-value" id="kpiOEE">0%</div>
+                            <div class="kpi-label">Composite Score</div>
+                        </div>
+                    </div>
+
+                    <div class="metrics-row">
+                        <div class="metric-box">
+                            <div class="metric-icon">📦</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Good Units</span>
+                                <span class="metric-value" id="metricGoodUnits">0</span>
+                            </div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-icon">🔢</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Total Units</span>
+                                <span class="metric-value" id="metricTotalUnits">0</span>
+                            </div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-icon">⏱️</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Run Time</span>
+                                <span class="metric-value" id="metricRunTime">0h</span>
+                            </div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-icon">🚫</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Downtime</span>
+                                <span class="metric-value" id="metricDowntime">0m</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-grid">
+                        <div class="chart-panel large">
+                            <div class="panel-header">
+                                <h3>OEE Trend (14 Days)</h3>
+                                <button class="btn-small">Export</button>
+                            </div>
+                            <canvas id="oeeTrendChart"></canvas>
+                        </div>
+
+                        <div class="chart-panel">
+                            <div class="panel-header">
+                                <h3>Line Performance</h3>
+                            </div>
+                            <canvas id="linePerformanceChart"></canvas>
+                        </div>
+
+                        <div class="chart-panel">
+                            <div class="panel-header">
+                                <h3>Defect Distribution</h3>
+                            </div>
+                            <canvas id="defectChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="table-panel">
                         <div class="panel-header">
-                            <h3>OEE Trend (14 Days)</h3>
-                            <button class="btn-small">Export</button>
+                            <h3>Shift Summary</h3>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm" id="exportExcel">📊 Excel</button>
+                                <button class="btn btn-sm" id="exportPDF">📄 PDF</button>
+                            </div>
                         </div>
-                        <canvas id="oeeTrendChart"></canvas>
-                    </div>
-
-                    <div class="chart-panel">
-                        <div class="panel-header">
-                            <h3>Line Performance</h3>
-                        </div>
-                        <canvas id="linePerformanceChart"></canvas>
-                    </div>
-
-                    <div class="chart-panel">
-                        <div class="panel-header">
-                            <h3>Defect Distribution</h3>
-                        </div>
-                        <canvas id="defectChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Data Table -->
-                <div class="table-panel">
-                    <div class="panel-header">
-                        <h3>Shift Summary</h3>
-                        <div class="action-buttons">
-                            <button class="btn btn-sm" id="exportExcel">📊 Excel</button>
-                            <button class="btn btn-sm" id="exportPDF">📄 PDF</button>
-                        </div>
-                    </div>
-                    <div class="table-wrapper">
-                        <table id="shiftTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Line</th>
-                                    <th>Shift</th>
-                                    <th>Avail.</th>
-                                    <th>Perf.</th>
-                                    <th>Quality</th>
-                                    <th>OEE</th>
-                                    <th>Good Units</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Production Page -->
-            <div class="page production-page">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Production Data Management</h2>
-                    </div>
-                    
-                    <div class="upload-section">
-                        <h3>Upload Production Data</h3>
-                        <div class="upload-area" id="uploadArea">
-                            <p>Drag and drop CSV or XLSX file here</p>
-                            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden>
-                        </div>
-                        <div id="uploadStatus"></div>
-                    </div>
-
-                    <div class="live-data-section">
-                        <h3>Live Production Stream</h3>
-                        <div class="live-status" id="liveStatus">Status: Offline</div>
-                        <button class="btn btn-primary" id="toggleLiveStream">Start Live Stream</button>
-                        <div id="liveDataDisplay" class="live-data-grid"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quality Page -->
-            <div class="page quality-page">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Quality Analysis</h2>
-                    </div>
-                    
-                    <div class="quality-content">
-                        <div class="quality-chart">
-                            <h3>Defect Trends</h3>
-                            <canvas id="defectTrendChart"></canvas>
-                        </div>
-                        <div class="quality-table">
-                            <h3>Defect Details</h3>
-                            <table id="defectTable">
+                        <div class="table-wrapper">
+                            <table id="shiftTable">
                                 <thead>
                                     <tr>
                                         <th>Date</th>
                                         <th>Line</th>
-                                        <th>Defect Type</th>
-                                        <th>Count</th>
+                                        <th>Shift</th>
+                                        <th>Avail.</th>
+                                        <th>Perf.</th>
+                                        <th>Quality</th>
+                                        <th>OEE</th>
+                                        <th>Good Units</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -253,38 +195,50 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Reports Page -->
-            <div class="page reports-page">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Reports & Export</h2>
-                    </div>
-                    
-                    <div class="report-options">
-                        <div class="report-card">
-                            <h3>Daily Summary</h3>
-                            <p>Export daily OEE metrics</p>
-                            <button class="btn btn-primary">Generate</button>
+                <!-- Production Page -->
+                <div class="page production-page">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Production Data Management</h2>
                         </div>
-                        <div class="report-card">
-                            <h3>Weekly Analysis</h3>
-                            <p>Trend analysis and KPIs</p>
-                            <button class="btn btn-primary">Generate</button>
-                        </div>
-                        <div class="report-card">
-                            <h3>Monthly Report</h3>
-                            <p>Comprehensive performance review</p>
-                            <button class="btn btn-primary">Generate</button>
+                        
+                        <div class="upload-section">
+                            <h3>Upload Production Data</h3>
+                            <div class="upload-area" id="uploadArea">
+                                <p>Drag and drop CSV or XLSX file here</p>
+                                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden>
+                            </div>
+                            <div id="uploadStatus"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </main>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
-{% endblock %}
+                <!-- Quality Page -->
+                <div class="page quality-page">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Quality Analysis</h2>
+                        </div>
+                        <p>Quality analysis features coming soon...</p>
+                    </div>
+                </div>
+
+                <!-- Reports Page -->
+                <div class="page reports-page">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Reports & Export</h2>
+                        </div>
+                        <p>Advanced reporting features coming soon...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
